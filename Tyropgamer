@@ -1,0 +1,621 @@
+Enter file contents hereSkip to content 
+
+
+  
+
+ 
+
+This repository
+  
+Pull requests 
+
+
+Issues 
+
+
+Gist
+
+
+  You have no unread notifications
+ 
+
+  Create new...
+
+
+
+
+
+
+
+
+
+
+
+
+@Tyropgamer  View profile and more
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+ Watch   45  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  Star  180  
+
+
+  Fork  323 
+
+
+ Apostolique/Agar.io-bot  
+  
+
+
+
+
+   
+Code
+
+    
+Issues
+
+    
+Pull requests
+
+   
+Wiki
+
+
+   
+Pulse
+
+   
+Graphs
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+ 
+Browse files 
+Version after the stream today. 
+
+Finally finished the Angle merging code. It can probably be simplified but otherwise whatever.
+Wall code is broken when small in this version.
+
+ master
+  
+commit 51194e09185cc8ebdfea0cd7d70448d957c76d86 1 parent 3dd86d7  
+@Apostolique Apostolique authored 13 hours ago 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+ 
+
+Unified  Split  
+
+ Showing 1 changed file  with 186 additions and 28 deletions. 
+ +186  −28    214 lines changed   bot.user.js 
+
+ 
+
+
+ ViewView the whole file at version 51194e0  
+
+214 186 additions & 28 deletions bot.user.js  
+
+
+
+ 
+ @@ -2,7 +2,7 @@ 
+2 2   // @name        AposBot  
+3 3   // @namespace   AposBot  
+4 4   // @include     http://agar.io/  
+5   -// @version     3.04  
+ 5  +// @version     3.05  
+6 6   // @grant       none  
+7 7   // @author      http://www.twitch.tv/apostolique  
+8 8   // ==/UserScript==  
+
+ 
+ @@ -86,6 +86,18 @@ console.log("Running Apos Bot!"); 
+86 86           return dotList;  
+87 87       }  
+88 88     
+ 89  +  
+ 90  +    function compareSize(player1, player2, ratio) {  
+ 91  +        if (player1.size * player1.size * ratio < player2.size * player2.size) {  
+ 92  +            return true;  
+ 93  +        }  
+ 94  +        return false;  
+ 95  +    }  
+ 96  +  
+ 97  +    function canSplit(player1, player2) {  
+ 98  +        return compareSize(player1, player2, 2.30) && !compareSize(player1, player2, 9);  
+ 99  +    }  
+ 100  +  
+89 101       function processEverything(listToUse) {  
+90 102           Object.keys(listToUse).forEach(function(element, index) {  
+91 103               computeAngleRanges(listToUse[element], getPlayer()[0]);  
+
+ 
+ @@ -100,7 +112,8 @@ console.log("Running Apos Bot!"); 
+100 112     
+101 113           if (player.length == 1) {  
+102 114               dotList = getListBasedOnFunction(function(element) {  
+103   -                if (interNodes[element].d && (interNodes[element].size * 1.10 <= player[0].size) && interNodes[element].size * 1.15 >= player[0].size) {  
+ 115  +                //Check this see if this is still right.  
+ 116  +                if (interNodes[element].d && compareSize(interNodes[element], player[0], 1.10) && !compareSize(interNodes[element], player[0], 1.15)) {  
+104 117                       return true;  
+105 118                   }  
+106 119                   return false;  
+
+ 
+ @@ -152,9 +165,9 @@ console.log("Running Apos Bot!"); 
+152 165               }  
+153 166     
+154 167               for (var i = 0; i < player.length; i++) {  
+155   -                if (!isMe && (!interNodes[element].d && (interNodes[element].size >= player[i].size * 1.15))) {  
+ 168  +                if (!isMe && (!interNodes[element].d && compareSize(player[i], interNodes[element], 1.30))) {  
+156 169                       return true;  
+157   -                } else if (interNodes[element].d && (interNodes[element].size * 1.15 <= player[i].size)) {  
+ 170  +                } else if (interNodes[element].d && compareSize(interNodes[element], player[i], 1.30)) {  
+158 171                       return true;  
+159 172                   }  
+160 173                   return false;  
+
+ 
+ @@ -181,7 +194,7 @@ console.log("Running Apos Bot!"); 
+181 194               }  
+182 195     
+183 196               for (var i = 0; i < player.length; i++) {  
+184   -                if (!isMe && !interNodes[element].d && (interNodes[element].size * 1.25 <= player[i].size) || (interNodes[element].size <= 11)) {  
+ 197  +                if (!isMe && !interNodes[element].d && compareSize(interNodes[element], player[i], 1.30) || (interNodes[element].size <= 11)) {  
+185 198                       return true;  
+186 199                   } else {  
+187 200                       return false;  
+
+ 
+ @@ -391,6 +404,8 @@ console.log("Running Apos Bot!"); 
+391 404     
+392 405           if (canSplit(blob1, blob2)) {  
+393 406               radius += 710;  
+ 407  +        } else {  
+ 408  +            radius += blob1.size * 2;  
+394 409           }  
+395 410     
+396 411           var shouldInvert = false;  
+
+ 
+ @@ -584,34 +599,149 @@ console.log("Running Apos Bot!"); 
+584 599           return angleList;  
+585 600       }  
+586 601     
+ 602  +    //listToUse contains angles in the form of [angle, boolean].  
+ 603  +    //boolean is true when the range is starting. False when it's ending.  
+ 604  +    //range = [[angle1, true], [angle2, false]]  
+587 605       function addAngle(listToUse, range) {  
+588 606           //#1 Find first open element  
+589 607           //#2 Try to add range1 to the list. If it is within other range, don't add it, set a boolean.  
+590 608           //#3 Try to add range2 to the list. If it is withing other range, don't add it, set a boolean.  
+591 609     
+592   -        /*var startIndex = 0;  
+ 610  +        var startIndex = 0;  
+ 611  +  
+ 612  +        if (listToUse.length > 0 && !listToUse[0][1]) {  
+ 613  +            startIndex = 1;  
+ 614  +        }  
+ 615  +  
+ 616  +        var startMark = 0;  
+ 617  +        var startBool = false;  
+ 618  +  
+593 619           for (var i = 0; i < listToUse.length; i++) {  
+594   -            if (listToUse[i][1]) {  
+595   -                startIndex = i;  
+ 620  +            var angle1 = listToUse[(i + startIndex).mod(listToUse.length)][0];   
+ 621  +            var angle2 = listToUse[(i + 1 + startIndex).mod(listToUse.length)][0];  
+ 622  +  
+ 623  +            console.log("Current Index: " + (i + startIndex).mod(listToUse.length) + " angle: " + angle1 + ", " + angle2);  
+ 624  +  
+ 625  +            var segmentRange = (angle2 - angle1).mod(360);  
+ 626  +  
+ 627  +            if (angleIsWithin(range[0][0], [angle1, segmentRange])) {  
+ 628  +  
+ 629  +                startMark = (i + 1 + startIndex).mod(listToUse.length);  
+ 630  +  
+ 631  +                if (i.mod(2) == 0) {  
+ 632  +                    startBool = true;  
+ 633  +                }  
+ 634  +  
+596 635                   break;  
+597 636               }  
+ 637  +  
+ 638  +            //If startBool is false, add range[0] to array at index startMark.  
+598 639           }  
+599 640     
+ 641  +        var endMark = 0;  
+ 642  +        var endBool = false;  
+ 643  +  
+600 644           for (var i = 0; i < listToUse.length; i++) {  
+601   -            if (listToUse[(i + startIndex).mod(listToUse.length)] < range[0]) {  
+ 645  +            var angle1 = listToUse[(i + startIndex).mod(listToUse.length)][0];   
+ 646  +            var angle2 = listToUse[(i + 1 + startIndex).mod(listToUse.length)][0];  
+ 647  +  
+ 648  +            var segmentRange = (angle2 - angle1).mod(360);  
+ 649  +  
+ 650  +            if (angleIsWithin(range[1][0], [angle1, segmentRange])) {  
+ 651  +  
+ 652  +                endMark = (i + 1 + startIndex).mod(listToUse.length);  
+ 653  +  
+ 654  +                if (i.mod(2) == 0) {  
+ 655  +                    endBool = true;  
+ 656  +                }  
+ 657  +  
+ 658  +                break;  
+ 659  +            }  
+ 660  +        }  
+ 661  +  
+ 662  +        if (startMark <= endMark) {  
+ 663  +            var tempLen = listToUse.length;  
+ 664  +  
+ 665  +            if (!startBool) {  
+ 666  +                tempLen++;  
+ 667  +            }  
+ 668  +  
+ 669  +            if (!endBool) {  
+ 670  +                console.log("Truly added end: " + endMark + " value: " + range[1]);  
+ 671  +                listToUse.splice(endMark, 0, range[1]);  
+ 672  +                //endMark = (endMark + 1).mod(tempLen);  
+ 673  +            }  
+ 674  +            if (!startBool) {  
+ 675  +                console.log("Truly added sta: " + startMark + " value: " + range[0]);  
+ 676  +                listToUse.splice(startMark, 0, range[0]);  
+ 677  +                //startMark = (startMark + 1).mod(listToUse.length);  
+ 678  +            }  
+ 679  +        } else {  
+ 680  +            var tempLen = listToUse.length;  
+602 681     
+ 682  +            if (!endBool) {  
+ 683  +                tempLen++;  
+ 684  +            }  
+ 685  +  
+ 686  +            if (!startBool) {  
+ 687  +                console.log("Truly added sta: " + startMark + " value: " + range[0]);  
+ 688  +                listToUse.splice(startMark, 0, range[0]);  
+ 689  +                //startMark = (startMark + 1).mod(tempLen);  
+ 690  +            }  
+ 691  +            if (!endBool) {  
+ 692  +                console.log("Truly added end: " + endMark + " value: " + range[1]);  
+ 693  +                listToUse.splice(endMark, 0, range[1]);  
+ 694  +                //endMark = (endMark + 1).mod(listToUse.length);  
+603 695               }  
+ 696  +        }  
+ 697  +  
+ 698  +        console.log("Okay... " + startMark + ", " + endMark + " len: " + listToUse.length + " sb:" + startBool + " eb: " + endBool);  
+ 699  +  
+ 700  +        /*if (startBool && endBool) {  
+ 701  +            startMark = (startMark - 1).mod(listToUse.length);  
+604 702           }*/  
+605 703     
+606   -    }  
+ 704  +        for (var i = 0; i < listToUse.length; i++) {  
+ 705  +            console.log("Hands are clean: " + i + " " + listToUse[i]);  
+ 706  +        }  
+607 707     
+608   -    function canSplit(player1, player2) {  
+609   -        if (player1.size * player1.size * 2.30 < player2.size * player2.size) {  
+610   -            return true;  
+ 708  +        var startDist = (listToUse[startMark][0] - range[0][0]).mod(360);  
+ 709  +        var endDist = (listToUse[endMark][0] - range[1][0]).mod(360);  
+ 710  +  
+ 711  +        if (startMark != endMark && listToUse.length > 2) {  
+ 712  +            console.log("I really should get rid of someone.");  
+ 713  +            var diff = (endMark - startMark);  
+ 714  +  
+ 715  +            if (endMark > startMark) {  
+ 716  +                for (var i = endMark; i > (endMark - diff); i--) {  
+ 717  +                    console.log("#lolRekt1 " + (i).mod(listToUse.length) + " value: " + listToUse[(i).mod(listToUse.length)][0]);  
+ 718  +                    listToUse.splice((i).mod(listToUse.length), 1);  
+ 719  +                }  
+ 720  +            } else {  
+ 721  +                for (var i = endMark - 1; i >= 0; i--) {  
+ 722  +                    console.log("#lolRekt2 " + (i).mod(listToUse.length) + " value: " + listToUse[(i).mod(listToUse.length)][0]);  
+ 723  +                    listToUse.splice((i).mod(listToUse.length), 1);  
+ 724  +                    startMark = (startMark - 1).mod(listToUse.length);  
+ 725  +                }  
+ 726  +                console.log("Secret agent! Keep out: " + (listToUse.length - 1) + " to " + startMark);  
+ 727  +                for (var i = listToUse.length - 1; i > startMark; i--) {  
+ 728  +                    console.log("#lolRekt3 " + (i).mod(listToUse.length) + " value: " + listToUse[(i).mod(listToUse.length)][0]);  
+ 729  +                    listToUse.splice((i).mod(listToUse.length), 1);  
+ 730  +                }  
+ 731  +            }  
+ 732  +        } else if (startMark != endMark) {  
+ 733  +            console.log("startMark: " + startMark + " endMark " + endMark);  
+ 734  +        } else if (startMark == endMark && startBool && endBool && startDist < endDist) {  
+ 735  +            for (var i = listToUse.length - 1; i >= 0; i--) {  
+ 736  +                console.log("#lolRekt4 " + (i).mod(listToUse.length) + " value: " + listToUse[(i).mod(listToUse.length)][0]);  
+ 737  +                listToUse.splice((i).mod(listToUse.length), 1);  
+ 738  +            }  
+611 739           }  
+612   -        return false;  
+ 740  +  
+ 741  +        return listToUse;  
+613 742       }  
+614 743     
+ 744  +  
+615 745       function findDestination() {  
+616 746           var player = getPlayer();  
+617 747           var interNodes = getMemoryCells();  
+
+ 
+ @@ -651,7 +781,7 @@ console.log("Running Apos Bot!"); 
+651 781                       if (canSplit(player[0], allPossibleThreats[i])) {  
+652 782                           drawCircle(allPossibleThreats[i].x, allPossibleThreats[i].y, allPossibleThreats[i].size + 710, 0);  
+653 783                       } else {  
+654   -                        drawCircle(allPossibleThreats[i].x, allPossibleThreats[i].y, allPossibleThreats[i].size + player[0].size, 3);  
+ 784  +                        drawCircle(allPossibleThreats[i].x, allPossibleThreats[i].y, allPossibleThreats[i].size + player[0].size + player[0].size, 3);  
+655 785                       }  
+656 786     
+657 787                       if (allPossibleThreats[i].danger && f.getLastUpdate() - allPossibleThreats[i].dangerTimeOut > 1000) {  
+
+ 
+ @@ -659,7 +789,7 @@ console.log("Running Apos Bot!"); 
+659 789                           allPossibleThreats[i].danger = false;  
+660 790                       }  
+661 791     
+662   -                    if ((canSplit(player[0], allPossibleThreats[i]) && enemyDistance < allPossibleThreats[i].size + 710 + player[0].size) || (!canSplit(player[0], allPossibleThreats[i]) && enemyDistance < allPossibleThreats[i].size + player[0].size)) {  
+ 792  +                    if ((canSplit(player[0], allPossibleThreats[i]) && enemyDistance < allPossibleThreats[i].size + 710 + player[0].size) || (!canSplit(player[0], allPossibleThreats[i]) && enemyDistance < allPossibleThreats[i].size + player[0].size + player[0].size)) {  
+663 793     
+664 794                           allPossibleThreats[i].danger = true;  
+665 795                           allPossibleThreats[i].dangerTimeOut = f.getLastUpdate();  
+
+ 
+ @@ -798,27 +928,52 @@ console.log("Running Apos Bot!"); 
+798 928                       delete interNodes[4];  
+799 929                   }  
+800 930     
+801   -                //console.log("1) Good Angles: " + goodAngles.length + " Bad Angles: " + badAngles.length);  
+802   -                //TODO: Step 1: Write code to substract angle ranges.  
+803   -                //console.log("---");  
+804   -                var sortedInterList = [];  
+ 931  +                var stupidList = [];  
+805 932     
+806 933                   for (var i = 0; i < badAngles.length; i++) {  
+ 934  +                    var angle1 = badAngles[i][0];  
+ 935  +                    var angle2 = rangeToAngle(badAngles[i]);  
+ 936  +                    stupidList.push([[angle1, true], [angle2, false]]);  
+ 937  +  
+ 938  +                }  
+807 939     
+808   -                    var tempGroup = seperateAngle(badAngles[i]);  
+ 940  +                /*stupidList.push([[0, true], [90, false]]);  
+ 941  +                stupidList.push([[100, true], [120, false]]);  
+ 942  +                stupidList.push([[45, true], [150, false]]);  
+ 943  +                stupidList.push([[60, true], [140, false]]);  
+ 944  +                stupidList.push([[270, true], [300, false]]);  
+ 945  +                stupidList.push([[45, true], [20, false]]);*/  
+809 946     
+810   -                    addSorted(sortedInterList, tempGroup[0]);  
+811   -                    addSorted(sortedInterList, tempGroup[1]);  
+ 947  +                console.log("Added random noob stuff.");  
+812 948     
+ 949  +                var sortedInterList = [];  
+ 950  +  
+ 951  +                for (var i = 0; i < stupidList.length; i++) {  
+ 952  +                    console.log("Adding: " + stupidList[i][0][0] + ", " + stupidList[i][1][0]);  
+ 953  +                    sortedInterList = addAngle(sortedInterList, stupidList[i])  
+ 954  +  
+ 955  +                    if (sortedInterList.length == 0) {  
+ 956  +                        break;  
+ 957  +                    }  
+813 958                   }  
+814 959     
+815   -                //console.log("Bad angles added!");  
+ 960  +                var offsetI = 0;  
+ 961  +  
+ 962  +                if (sortedInterList.length > 0 && sortedInterList[0][1]) {  
+ 963  +                    offsetI = 1;  
+ 964  +                }  
+ 965  +  
+ 966  +                var goodAngles = [];  
+ 967  +                for (var i = 0; i < sortedInterList.length; i += 2) {  
+ 968  +                    var angle1 = sortedInterList[(i + offsetI).mod(sortedInterList.length)][0];  
+ 969  +                    var angle2 = sortedInterList[(i + 1 + offsetI).mod(sortedInterList.length)][0];  
+ 970  +                    var diff = (angle2 - angle1).mod(360);  
+ 971  +                    goodAngles.push([angle1, diff]);  
+ 972  +                    console.log("Yo man! Cool stuff added man! " + angle1 + ", " + diff + ", " + angle2 + " len: " + sortedInterList.length);  
+ 973  +                }  
+816 974     
+817   -                removeDuplicates(sortedInterList);  
+818   -                //console.log("Duplicates removed!");  
+819 975     
+820   -                goodAngles = mergeAngles(sortedInterList);  
+821   -                //console.log("Angles merged");  
+ 976  +                console.log("Already done? That was quick.");  
+822 977     
+823 978                   for (var i = 0; i < goodAngles.length; i++) {  
+824 979                       if (goodAngles[i][0] != goodAngles[i][1].mod(360)) {  
+
+ 
+ @@ -854,6 +1009,8 @@ console.log("Running Apos Bot!"); 
+854 1009                       drawLine(player[0].x, player[0].y, line1[0], line1[1], 7);  
+855 1010                       tempMoveX = line1[0];  
+856 1011                       tempMoveY = line1[1];  
+ 1012  +                } else if (badAngles.length > 0 && goodAngles == 0) {  
+ 1013  +                    //TODO: CODE TO HANDLE WHEN THERE IS NO GOOD ANGLE BY THERE ARE ENEMIES AROUND!!!!!!!!!!!!!  
+857 1014                   } else {  
+858 1015                       for (var i = 0; i < clusterAllFood.length; i++) {  
+859 1016                           //console.log("mefore: " + clusterAllFood[i][2]);  
+
+ 
+ @@ -897,6 +1054,7 @@ console.log("Running Apos Bot!"); 
+897 1054               }  
+898 1055               //console.log("MOVING RIGHT NOW!");  
+899 1056     
+ 1057  +            console.log("______Never lied ever in my life.");  
+900 1058     
+901 1059               return [tempMoveX, tempMoveY];  
+902 1060           }  
+
+ 
+  
+ 
+
+
+
+ 
+
+
+@Tyropgamer 
+ 
+  
+
+
+ Markdown supported   Edit in fullscreen  
+
+Write Preview 
+
+
+
+Leave a comment
+Attach images by dragging & dropping or  selecting them.        
+
+
+
+
+
+
+
+
+
+
+
+Comment on this commit 
+
+ 
+      Subscribe  
+ 
+You're not receiving notifications from this thread.
+  
+   
+
+Status
+ API
+ Training
+ Shop
+ Blog
+ About
+ Help
+   © 2015 GitHub, Inc.
+ Terms
+ Privacy
+ Security
+ Contact
+ 
+
+
+
+
+
+
+
+
+  
